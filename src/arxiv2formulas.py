@@ -27,47 +27,50 @@ import glob
 import sys
 import codecs
 
-PATTERNS = [r"\\begin\{equation\}(.*?)\\end\{equation\}",
-            r"\$\$(.*?)\$\$",
-            r"\$(.*?)\$",
-            r"\\\[(.*?)\\\]",
-            r"\\\((.*?)\\\)"]
+# Extract content inside tabular only
+PATTERNS = [r"\\begin\{tabular\}(.*?)\\end\{tabular\}"] 
+#PATTERNS = [r"\\begin\{equation\}(.*?)\\end\{equation\}",
+#            r"\$\$(.*?)\$\$",
+#            r"\$(.*?)\$",
+#            r"\\\[(.*?)\\\]",
+#            r"\\\((.*?)\\\)"]
 DIR = ""
 
 #Number of bytes required for formula to be saved
-MIN_LENGTH = 40
-MAX_LENGTH = 1024
+MIN_LENGTH = 0
+MAX_LENGTH = float('inf')
 
-def get_formulas(latex):
+def get_formulas(latex, filename):
     """ Returns detected latex formulas from given latex string
     Returns list of formula strings"""
     ret = []
     for pattern in PATTERNS:
         res = re.findall(pattern, latex, re.DOTALL)
-        #Remove short ones
-        res = [x.strip().replace("\n","").replace("\r","") for x in res if 
+        # Remove short ones
+        # Replace \n with <__NEWLINE__>
+        res = [(filename, x.strip().replace("\n","<__NEWLINE__>").replace("\r","")) for x in res if 
                MAX_LENGTH > len(x.strip()) > MIN_LENGTH]
         ret.extend(res)
     return ret
 
-def process_file(tar, file_name):
+def process_file(tar, file_name, path_prefix):
     file_basename, file_extension = os.path.splitext(file_name)
     if file_extension == '.pdf':
         return []
     elif file_extension == '.tar':
-        return process_tar(tar.extractfile(file_name))
+        return process_tar(tar.extractfile(file_name), os.path.join(path_prefix, file_name))
     elif file_extension == '.gz':
-        return process_tar(tar.extractfile(file_name))
+        return process_tar(tar.extractfile(file_name), os.path.join(path_prefix, file_name))
     elif file_extension == '.tex':
         try:
             file_content = codecs.decode(tar.extractfile(file_name).read(), 'ascii')
         except:
             return []
-        return get_formulas(file_content)
+        return get_formulas(file_content, os.path.join(path_prefix, file_name))
     else:
         return []
 
-def process_tar(file):
+def process_tar(file, path_prefix):
     formulas = []
     tar = None
     try:
@@ -76,17 +79,18 @@ def process_tar(file):
         return []
     files = tar.getnames()
     for file_name in files:
-        formulas.extend(process_file(tar, file_name))
+        formulas.extend(process_file(tar, file_name, path_prefix))
     return formulas
 
 def main(directory):
-    arxiv_tars = glob.glob(directory+"*.tar")
-    arxiv_tars.extend(glob.glob(directory+"*.tar.gz"))
+    arxiv_tars = glob.glob(os.path.join(directory,"*.tar"))
+    arxiv_tars.extend(glob.glob(os.path.join(directory,"*.tar.gz")))
     formulas = []
     ctr = 0
-    for filename in arxiv_tars:
+    for idx, filename in enumerate(arxiv_tars):
+        print ('Processing: %s (%d out of %d)'%(filename, idx+1, len(arxiv_tars)))
         with open(filename, "rb") as tar_file:
-            processed_formulas = process_tar(tar_file)
+            processed_formulas = process_tar(tar_file, filename)
             if len(processed_formulas) == 0:
                 print("File %s returned 0 formulas. Invalid file?" % filename)
             else:
@@ -98,9 +102,9 @@ def main(directory):
     print("Saving formulas...")
     
     with codecs.open("formulas.txt", mode="w", encoding="ascii") as f:
-        for formula in formulas:
+        for filename, formula in formulas:
             try:
-                f.write("{}\n".format(formula))
+                f.write("{}\t{}\n".format(filename, formula))
             except:
                 print("error", formula)
 
