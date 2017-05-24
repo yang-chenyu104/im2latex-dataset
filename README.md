@@ -38,6 +38,15 @@ isn't quite enough for this task. I can build bigger sets on request.
 - For creating more compact images of formulas (image cropped so that formula fits)
     - [textogif](https://www.fourmilab.ch/webtools/textogif/textogif.html) and its dependencies
     - `textogif` needs to be placed in same directory where images are generated, otherwise it won't work.
+- For tokenizing LaTeX, python package [plasTeX](https://github.com/tiarno/plastex) is required.
+
+## Commands for building TABLE2LATEX dataset
+1. Download arXiv tarballs by following instructions [here](https://arxiv.org/help/bulk_data_s3) and put them under a directory `<TARDIR>`.
+2. Run `python src/arxiv2tabulars.py <TARDIR>`. A file `tabulars.txt` which contains all extracted tabulars will be created.
+3. Run `python src/tabular2image.py tabulars.txt`. It will create `im2latex.lst` which contains the image filenames and the corresponding tabular ids, `im2latex_tabulars.lst` which lists all tabulars starting from id 0, as well as folder `tabular_images` containing all images and folder `tabular_pdfs` containing all pdfs. [pdflatex](https://www.tug.org/applications/pdftex/) and [imagemagick](https://www.imagemagick.org/script/index.php) are required.
+4. Run `python src/deduplicate.py  im2latex.lst im2latex_tabulars.lst`. It will remove duplicate tables.
+5. Run `python src/split_train_val_test.py im2latex.lst im2latex_tabulars.lst`. It will split train, validation and test set at article level. `im2latex_train.lst`, `im2latex_validate.lst` and `im2latex_test.lst` will be generated.
+6. Run `python src/tokenize.py im2latex_tabulars.lst im2latex_tabulars.tok.txt`. It will tokenize Python package [plasTeX](https://github.com/tiarno/plastex) is required.
 
 ## Building your own dataset
 1. Download bunch of LaTeX sources packed in .tar files (by using the latex_urls.txt, for example)
@@ -58,7 +67,7 @@ isn't quite enough for this task. I can build bigger sets on request.
 
 - Sometimes pdflatex gets stuck inside an infinite loop when compiling an image.
   - To fix this you need to manually kill stuck pdflatex processes, otherwise script won't end
-  
+ 
 ## Issues and possible TODOs
 - If `pdflatex` is used with `convert` this will generate pictures of whole page
     - While this might be a good thing (eg. fixed input size), it might also severly slow down training

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-#  arxiv2formulas.py
-#  Parses arxiv tar files of source files for latex formulas
+#  arxiv2tabulars.py
+#  Parses arxiv tar files of source files for latex tabulars
 #
 #  © Copyright 2017, mitar (https://github.com/mitar)
 #                    Anssi "Miffyli" Kanervisto
@@ -101,7 +101,7 @@ def main(directory):
     print("Parsed {} formulas".format(len(formulas)))
     print("Saving formulas...")
     
-    with codecs.open("formulas.txt", mode="w", encoding="ascii") as f:
+    with codecs.open("tabulars.txt", mode="w", encoding="ascii") as f:
         for filename, formula in formulas:
             try:
                 f.write("{}\t{}\n".format(filename, formula))
@@ -110,7 +110,7 @@ def main(directory):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("usage: arxiv2formulas tar_directory\n"+    
+        print("usage: python %s tar_directory\n"%sys.argv[0]+    
               "tar_directory should hold .tar files containing arxiv sources")
     else:
         main(sys.argv[1])
