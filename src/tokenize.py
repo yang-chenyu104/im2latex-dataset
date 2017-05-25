@@ -1,22 +1,7 @@
-import sys
+import sys, re
 from plasTeX.TeX import TeX
+from utils import pre_tokenize, post_tokenize, BASIC_SKELETON
 
-BASIC_SKELETON = r"""
-\documentclass[12pt]{article}
-\pagestyle{empty}
-\usepackage{booktabs}
-\usepackage{amsmath}
-\usepackage{multirow}
-\begin{document}
-
-\begin{tabular}%s\end{tabular}
-
-\end{document}
-"""
-
-# special symbol for \n
-NEWLINE = '<__NEWLINE__>'
-SPACE = '<__SPACE__>'
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
@@ -24,24 +9,18 @@ if __name__ == '__main__':
         sys.exit(1)
     with open(sys.argv[1]) as fin:
         with open(sys.argv[2], 'w') as fout:
+            idx = 0
             for line in fin:
                 _, tabular = line.split('\t', 1)
+                idx += 1
+                #if idx != 11:
+                #    continue
                 tex = TeX()
-                tex.input(BASIC_SKELETON%(tabular.replace(NEWLINE, '\n').strip()))
+                tex.input(BASIC_SKELETON%(pre_tokenize(tabular)))
+                #print (pre_tokenize(tabular))
                 tokens = [token for token in tex.itertokens()]
                 tokens_out = []
-                for token in tokens:
-                    if token == 'par':
-                        token = NEWLINE
-                    elif token == ' ':
-                        token = SPACE
-                    elif len(token) > 1: # mathcal -> \mathcal
-                        token = '\\'+token
-                    elif token == '\\':
-                        token = '\\\\'
-                    if token == '%':
-                        token = '\\%'
-                    if '\\active::' in token:
-                        token = token.replace('\\active::', '')
-                    tokens_out.append(token)
-                fout.write(' '.join(tokens_out)[272:-85] + '\n')
+                #jprint (':'.join(tokens))
+                tokens_out = post_tokenize(tokens)
+                #print (':'.join(tokens_out))
+                fout.write(' '.join(tokens_out)[385:-85] + '\n')

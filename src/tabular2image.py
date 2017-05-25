@@ -42,7 +42,7 @@ import shutil
 import hashlib
 from multiprocessing import Pool
 from subprocess import call
-
+from utils import BASIC_SKELETON
 # Max number of tabulars included
 MAX_NUMBER = float('inf')
 
@@ -59,20 +59,6 @@ NEWLINE = '<__NEWLINE__>'
 DEBUG = False
 DEVNULL = open(os.devnull, "w")
 
-BASIC_SKELETON = r"""
-\documentclass[12pt]{article}
-\pdfpagewidth 16in
-\pdfpageheight 16in
-\pagestyle{empty}
-\usepackage{amsmath}
-\usepackage{multirow}
-\usepackage{booktabs}
-\begin{document}
-
-\begin{tabular}%s\end{tabular}
-
-\end{document}
-"""
 
 # Different settings used to render images
 # in format key: [skeleton, rendering_call]
