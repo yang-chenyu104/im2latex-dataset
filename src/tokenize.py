@@ -23,4 +23,4 @@ if __name__ == '__main__':
                 #jprint (':'.join(tokens))
                 tokens_out = post_tokenize(tokens)
                 #print (':'.join(tokens_out))
-                fout.write(' '.join(tokens_out)[385:-85] + '\n')
+                fout.write(' '.join(tokens_out)[385:-86] + '\n')
